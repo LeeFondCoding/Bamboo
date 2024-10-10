@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Macro.h"
 
 #include <cstddef>

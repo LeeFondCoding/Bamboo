@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Macro.h"
+#include "base/Macro.h"
+#include "base/FileUtil.h"
 
 #include <cstddef>
 
@@ -9,9 +10,8 @@
 
 namespace bamboo {
 
-class AppendFile;
-
 class LogFile {
+public:
   LogFile(const std::string &basename, size_t roll_size, int flush_interval = 3,
           int check_every_n = 1024);
 
@@ -37,7 +37,7 @@ private:
   time_t start_{0};
   time_t last_roll_{0};
   time_t last_flush_{0};
-  std::unique_ptr<AppendFile> file_;
+  std::unique_ptr<FileUtil> file_;
 
   const static int kRollPerSeconds_ = 60 * 60 * 24;
 };

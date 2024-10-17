@@ -23,13 +23,13 @@ public:
 
   void handleEvent(TimeStamp receiveTime);
 
-  void setReadCallback(ReadEventCallback cb) { readCallback_ = std::move(cb); }
+  void setReadCallback(ReadEventCallback cb) { read_callback_ = std::move(cb); }
 
-  void setWriteCallback(EventCallback cb) { writeCallback_ = std::move(cb); }
+  void setWriteCallback(EventCallback cb) { write_callback_ = std::move(cb); }
 
-  void setCloseCallback(EventCallback cb) { closeCallback_ = std::move(cb); }
+  void setCloseCallback(EventCallback cb) { close_callback_ = std::move(cb); }
 
-  void setErrorCallback(EventCallback cb) { errorCallback_ = std::move(cb); }
+  void setErrorCallback(EventCallback cb) { err_callback_ = std::move(cb); }
 
   void tie(const std::shared_ptr<void> &);
 
@@ -71,13 +71,19 @@ public:
 
   int index() { return index_; }
   
-  void set_index(int idx) { index_ = idx; }
+  void setIndex(int idx) { index_ = idx; }
 
   EventLoop *ownerLoop() { return loop_; }
 
   void remove();
 
+  std::string reventsToString() const;
+
+  std::string eventsToString() const;
+
 private:
+  std::string eventsToString(int events) const;
+
   void update();
 
   void handleEventWithGuard(TimeStamp receiveTime);
@@ -95,10 +101,10 @@ private:
   bool event_handing_;
   bool added_to_loop_;
 
-  ReadEventCallback readCallback_;
-  EventCallback writeCallback_;
-  EventCallback errorCallback_;
-  EventCallback closeCallback_;
+  ReadEventCallback read_callback_;
+  EventCallback write_callback_;
+  EventCallback err_callback_;
+  EventCallback close_callback_;
 };
 
 } // namespace bamboo

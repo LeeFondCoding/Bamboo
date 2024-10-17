@@ -39,13 +39,21 @@ void LogFile::flush() { file_->flush(); }
 
 void LogFile::rollFile() {
   auto filename = getLogFileName(basename_);
-  file_.reset(new AppendFile(filename.c_str()));
+  file_.reset(new FileUtil(filename.c_str()));
 }
 
 std::string LogFile::getLogFileName(const std::string &basename) {
   std::string filename;
-  filename.reserve(basename.size() + 4);
+  filename.reserve(basename.size() + 32);
   filename = basename;
+
+  char timebuf[32];
+  struct tm tm;
+  time_t now;
+  now = time(NULL);
+  gmtime_r(&now, &tm); 
+  strftime(timebuf, sizeof timebuf, ".%Y%m%d-%H%M%S.", &tm);
+  filename += timebuf;
 
   filename += ".log";
 

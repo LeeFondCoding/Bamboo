@@ -6,13 +6,13 @@
 
 namespace bamboo {
 
-class AppendFile {
+class FileUtil {
 public:
-  DISALLOW_COPY(AppendFile);
+  DISALLOW_COPY(FileUtil);
 
-  explicit AppendFile(const char *filename);
+  explicit FileUtil(const char *filename);
 
-  ~AppendFile();
+  ~FileUtil();
 
   // not thread safe
   void append(const char *logline, size_t len);

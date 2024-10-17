@@ -37,6 +37,14 @@ LogStream &LogStream::operator<<(const bool val) {
   return *this;
 }
 
+LogStream &LogStream::operator<<(const short val) {
+  return *this << static_cast<int>(val);
+}
+
+LogStream &LogStream::operator<<(const unsigned short val) {
+  return *this << static_cast<unsigned int>(val);
+}
+
 LogStream &LogStream::operator<<(const int val) {
   formatInteger(val);
   return *this;
@@ -47,12 +55,58 @@ LogStream &LogStream::operator<<(const unsigned int val) {
   return *this;
 }
 
+LogStream &LogStream::operator<<(const long val) {
+  formatInteger(val);
+  return *this;
+}
+
+LogStream &LogStream::operator<<(const unsigned long val) {
+  formatInteger(val);
+  return *this;
+}
+
+LogStream &LogStream::operator<<(const long long val) {
+  formatInteger(val);
+  return *this;
+}
+
+LogStream &LogStream::operator<<(const unsigned long long val) {
+  formatInteger(val);
+  return *this;
+}
+
+LogStream &LogStream::operator<<(const char ch) {
+  buffer_.append(&ch, 1);
+  return *this;
+}
+
+LogStream &LogStream::operator<<(const void *p) {
+  uintptr_t v = reinterpret_cast<uintptr_t>(p);
+  if (buffer_.avail() >= kMaxNumericSize) {
+    char *buf = buffer_.current();
+    buf[0] = '0';
+    buf[1] = 'x';
+    size_t len = convert(buf + 2, v);
+    buffer_.add(len + 2);
+  }
+  return *this;
+}
+
 LogStream &LogStream::operator<<(const char *str) {
   if (str != nullptr) {
     buffer_.append(str, strlen(str));
   } else {
     buffer_.append("(null)", 6);
   }
+  return *this;
+}
+
+LogStream &LogStream::operator<<(const unsigned char *str) {
+  return *this << reinterpret_cast<const char *>(str);
+}
+
+LogStream &LogStream::operator<<(const std::string &str) {
+  buffer_.append(str.c_str(), str.size());
   return *this;
 }
 

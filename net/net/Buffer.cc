@@ -5,6 +5,8 @@
 
 namespace bamboo {
 
+const char Buffer::kCRLF[] = "\r\n";
+
 ssize_t Buffer::readFd(int fd, int *saveErrno) {
   char extrabuf[65536] = {0};
   struct iovec vec[2];

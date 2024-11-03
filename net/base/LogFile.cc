@@ -14,6 +14,8 @@ LogFile::LogFile(const std::string &basename, size_t roll_size,
   rollFile();
 }
 
+// if write frequecy >= check_every_n, and time >= flush_interval, roll
+//  and written bytes >= roll_size, roll
 void LogFile::append(const char *logline, size_t len) {
   file_->append(logline, len);
 
@@ -51,11 +53,12 @@ std::string LogFile::getLogFileName(const std::string &basename) {
   struct tm tm;
   time_t now;
   now = time(NULL);
-  gmtime_r(&now, &tm); 
+  gmtime_r(&now, &tm);
   strftime(timebuf, sizeof timebuf, ".%Y%m%d-%H%M%S.", &tm);
+  // timebuf : .20181204-235959.
   filename += timebuf;
 
-  filename += ".log";
+  filename += "log";
 
   return filename;
 }

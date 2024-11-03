@@ -15,14 +15,15 @@ void FileUtil::append(const char *logline, size_t len) {
   auto remain = len - has_written;
 
   while (remain > 0) {
-    size_t x = write(logline + has_written, remain);
-    if (x == 0) {
+    size_t written_bytes = write(logline + has_written, remain);
+    if (written_bytes == 0) {
       int err = ferror(fp_);
-      if (err)
-        fprintf(stderr, "AppendFile::append() failed : %d", err);
+      if (err) {
+        fprintf(stderr, "FileUtil::append() failed : %d", err);
+      }
       break;
     }
-    has_written += x;
+    has_written += written_bytes;
     remain = len - has_written;
   }
   written_bytes_ += len;

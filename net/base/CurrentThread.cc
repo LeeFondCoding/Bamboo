@@ -1,5 +1,6 @@
 #include "base/CurrentThread.h"
 
+namespace bamboo {
 namespace CurrentThread {
 
 thread_local int t_cachedTid = 0;
@@ -11,3 +12,4 @@ void cacheTid() {
 }
 
 } // namespace CurrentThread
+} // namespace bamboo

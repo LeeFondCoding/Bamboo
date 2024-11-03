@@ -10,6 +10,7 @@
 
 namespace bamboo {
 
+// roll file 
 class LogFile {
 public:
   LogFile(const std::string &basename, size_t roll_size, int flush_interval = 3,
@@ -23,9 +24,11 @@ public:
 
   void flush();
 
+  // replace current log file with new one
   void rollFile();
 
 private:
+  // return log file name with time e.g. basename.20241027-195722.log
   static std::string getLogFileName(const std::string &basename);
 
   const std::string basename_;

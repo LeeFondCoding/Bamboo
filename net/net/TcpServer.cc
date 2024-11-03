@@ -11,7 +11,7 @@ namespace bamboo {
 TcpServer::TcpServer(EventLoop *loop, const InetAddress &listen_addr,
                      const std::string &name, Option option)
     : loop_(loop), ip_port_(listen_addr.toIpPort()), name_(name),
-      acceptor_(new Acceptor(loop, listen_addr, option == Option::kReusePort)),
+      acceptor_(new Acceptor(loop, listen_addr, option == kReusePort)),
       thread_pool_(new EventLoopThreadPool(loop, name_)) {}
 
 TcpServer::~TcpServer() {

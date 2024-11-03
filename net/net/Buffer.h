@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cstddef>
 #include <string>
 #include <vector>
@@ -21,6 +22,11 @@ public:
   size_t prependableBytes() const { return reader_index_; }
   const char *peek() const { return begin() + reader_index_; }
 
+  const char *findCRLF() const {
+    const char *crlf = std::search(peek(), beginWrite(), kCRLF, kCRLF + 2);
+    return crlf == beginWrite() ? nullptr : crlf;
+  }
+
   void retrieve(size_t len) {
     if (len < readableBytes()) {
       reader_index_ += len;
@@ -28,6 +34,8 @@ public:
       retrieveAll();
     }
   }
+
+  void retrieveUntil(const char *end) { retrieve(end - peek()); }
 
   void retrieveAll() { reader_index_ = writer_index_ = kCheapPrepend; }
 
@@ -51,7 +59,11 @@ public:
     writer_index_ += len;
   }
 
-  char *beginWrite() { return begin() + writer_index_; }
+  void append(const std::string &str) { append(str.data(), str.size()); }
+
+  char *beginWrite() {
+    return begin() + writer_index_;
+  }
 
   const char *beginWrite() const { return begin() + writer_index_; }
 
@@ -73,5 +85,7 @@ private:
   size_t reader_index_;
   size_t writer_index_;
   std::vector<char> buffer_;
+
+  static const char kCRLF[];
 };
 } // namespace bamboo

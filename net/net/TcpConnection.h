@@ -1,8 +1,8 @@
 #pragma once
 
 #include "base/Macro.h"
-#include "net/CallBack.h"
 #include "net/Buffer.h"
+#include "net/CallBack.h"
 #include "net/InetAddress.h"
 
 #include <atomic>
@@ -15,6 +15,7 @@ namespace bamboo {
 
 class Channel;
 class EventLoop;
+class HttpContext;
 class InetAddress;
 class Socket;
 
@@ -22,16 +23,17 @@ class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
 public:
   TcpConnection(EventLoop *loop, const std::string &name, int sockfd,
                 const InetAddress &localAddr, const InetAddress &peerAddr);
-                
+
   ~TcpConnection();
 
   DISALLOW_COPY(TcpConnection)
-  
+
   EventLoop *getLoop() const { return loop_; }
   const InetAddress &localAddress() const { return local_addr_; }
   const InetAddress &peerAddress() const { return peer_addr_; }
   bool connected() const { return state_ == StateE::kConnected; }
   void send(const std::string &buf);
+  void send(Buffer *buf);
   void shutdown();
   const std::string &name() const { return name_; }
   void setConnectionCallback(const ConnectionCallback &cb) {
@@ -51,8 +53,12 @@ public:
   }
 
   void connectEstablished();
-  
+
   void connectDestroyed();
+
+  void setContext(HttpContext *context) { context_.reset(context); }
+
+  HttpContext *getMutableContext() { return context_.get(); }
 
 private:
   enum StateE { kDisconnected = 0, kConnecting, kConnected, kDisconnecting };
@@ -67,7 +73,9 @@ private:
 
   void handleError();
 
-  void sendInLoop(const void* message, size_t len);
+  void sendInLoop(const std::string &message);
+
+  void sendInLoop(const char *message, size_t len);
 
   void shutdownInLoop();
 
@@ -78,6 +86,7 @@ private:
 
   std::unique_ptr<Socket> socket_;
   std::unique_ptr<Channel> channel_;
+  std::unique_ptr<HttpContext> context_;
 
   const InetAddress local_addr_;
   const InetAddress peer_addr_;
@@ -91,7 +100,7 @@ private:
   Buffer input_buffer_;
   Buffer output_buffer_;
 
-  //64M
+  // 64M
   static constexpr size_t kHighWaterMark = 64 * 1024 * 1024;
 };
 } // namespace bamboo

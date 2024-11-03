@@ -5,6 +5,7 @@
 #include "assert.h"
 
 namespace {
+// print message to stdout
 void defaultOutput(const char *msg, size_t len) { fwrite(msg, 1, len, stdout); }
 
 void defaultFlush() { fflush(stdout); }

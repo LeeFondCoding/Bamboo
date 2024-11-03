@@ -17,7 +17,8 @@ class InetAddress;
 class TcpServer {
 public:
   using ThreadInitCallback = std::function<void(EventLoop *)>;
-  enum class Option { kNoReusePort, kReusePort };
+  
+  enum Option { kNoReusePort, kReusePort };
 
   TcpServer(EventLoop *loop, const InetAddress &listenAddr,
             const std::string &nameArg, Option option = Option::kNoReusePort);
@@ -44,12 +45,17 @@ public:
 
   void start();
 
+  std::string name() const { return name_; }
+
+  std::string ipPort() const { return ip_port_; }
+
 private:
   void newConnection(int sockfd, const InetAddress &peerAddr);
   void removeConnection(const TcpConnectionPtr &conn);
   void removeConnnectionInLoop(const TcpConnectionPtr &conn);
 
   using ConnectionMap = std::unordered_map<std::string, TcpConnectionPtr>;
+
   EventLoop *loop_;
   const std::string ip_port_;
   const std::string name_;

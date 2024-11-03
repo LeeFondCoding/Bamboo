@@ -1,7 +1,8 @@
-#include "InetAddress.h"
+#include "net/InetAddress.h"
 
 #include <arpa/inet.h>
-#include <cstring>
+
+#include <string.h>
 
 namespace bamboo {
 InetAddress::InetAddress(uint16_t port, std::string ip) {

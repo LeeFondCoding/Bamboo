@@ -10,7 +10,7 @@
 
 namespace bamboo {
 
-// wrapper std::thread
+// wrapper std::thread, attention tid
 class Thread {
 public:
   using ThreadFunc = std::function<void()>;
@@ -27,6 +27,7 @@ public:
 
   bool isStarted() const { return started_; }
 
+  // return linux thread id, not std::thread::id
   pid_t tid() const { return tid_; }
 
   static int threadCreated() { return thread_num_; }
@@ -36,11 +37,13 @@ private:
 
   bool started_{false};
   bool joined_{false};
+  // linux thread id, not std::thread::id
   pid_t tid_{0};
   ThreadFunc func_;
   std::string name_;
   std::unique_ptr<std::thread> thread_;
 
+  // number of threads
   static std::atomic_int thread_num_;
 };
 

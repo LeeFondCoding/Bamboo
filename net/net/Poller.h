@@ -31,7 +31,7 @@ public:
 
 protected:
   using ChannelMap = std::unordered_map<int, Channel *>;
-  ChannelMap channel_map_;
+  ChannelMap channels_;
 
 private:
   EventLoop *loop_;

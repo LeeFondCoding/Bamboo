@@ -6,6 +6,8 @@
 
 namespace bamboo {
 
+// the wrapper of sockaddr_in
+// only ipv4
 class InetAddress {
 public:
   explicit InetAddress(uint16_t port = 0, std::string ip = "127.0.0.1");

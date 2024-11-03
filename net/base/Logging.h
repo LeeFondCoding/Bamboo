@@ -62,7 +62,7 @@ inline Logger::LogLevel logLevel() { return g_logLevel; }
 
 #define LOG_WARN Logger(__SHORT_FILE__, __LINE__, Logger::WARN).stream()
 
-#define LOG_ERROR Logger(__SHORT_FILE__, __LINE__, Logger::ERROR).stream()
+#define LOG_ERROR Logger(__SHORT_FILE__, __LINE__, bamboo::Logger::ERROR).stream()
 
 #define LOG_FATAL Logger(__SHORT_FILE__, __LINE__, Logger::FATAL).stream()
 

@@ -98,4 +98,9 @@ void Logger::Impl::finish() {
   stream_ << " - " << basename_ << ':' << line_ << '\n';
 }
 
+// thread safe version of strerror
+const char *strerror_tl(int savedErrno) {
+  return strerror_r(savedErrno, t_errnobuf, sizeof t_errnobuf);
+}
+
 } // namespace bamboo

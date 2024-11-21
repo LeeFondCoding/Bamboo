@@ -4,6 +4,7 @@
 #include <cstdio>
 
 namespace bamboo {
+  
 FileUtil::FileUtil(const char *filename)
     : fp_(::fopen(filename, "ae")) { // 'e' for O_CLOEXEC
   ::setbuffer(fp_, buffer_, sizeof(buffer_));

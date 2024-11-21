@@ -6,6 +6,7 @@
 #include <cstring>
 
 namespace bamboo {
+
 class Logger {
 public:
   using OutputFunc = void (*)(const char *, size_t);
@@ -73,5 +74,7 @@ inline Logger::LogLevel logLevel() { return g_logLevel; }
 // /home/user/bamboo/net/base/Logging.h ==>> Logging.h
 #define __SHORT_FILE__                                                         \
   (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+
+const char *strerror_tl(int saved_err);
 
 } // namespace bamboo

@@ -7,16 +7,20 @@
 
 namespace bamboo {
 
+// 
 class CountDownLatch {
 public:
     explicit CountDownLatch(int count);
 
     DISALLOW_COPY(CountDownLatch)
 
+    // block until count_ == 0
     void wait();
 
+    // Decrease count_
     void countDown();
 
+    // return current count
     int getCount() const;
 
 private:

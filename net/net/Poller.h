@@ -17,7 +17,7 @@ public:
 
   Poller(EventLoop *loop);
 
-  virtual ~Poller();
+  virtual ~Poller() = default;
 
   virtual TimeStamp poll(int timeoutMs, ChannelList *activeChannels) = 0;
 
@@ -27,10 +27,14 @@ public:
 
   bool hasChannel(Channel *channel) const;
 
+  // return Poller should RAII
   static Poller *newDefaultPoller(EventLoop *loop);
+
+  void assertInLoopThread();
 
 protected:
   using ChannelMap = std::unordered_map<int, Channel *>;
+  
   ChannelMap channels_;
 
 private:

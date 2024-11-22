@@ -34,6 +34,7 @@ public:
   void tie(const std::shared_ptr<void> &);
 
   int fd() const { return fd_; }
+  
   int events() const { return events_; }
 
   void setRevents(int revents) { revents_ = revents; }
@@ -91,6 +92,7 @@ private:
   static const int kNoneEvent;
   static const int kReadEvent;
   static const int kWriteEvent;
+  
   EventLoop *loop_;
   const int fd_;
   int events_{0};

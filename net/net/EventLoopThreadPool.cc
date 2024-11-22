@@ -1,7 +1,5 @@
 #include "net/EventLoopThreadPool.h"
 
-#include "net/EventLoopThread.h"
-
 namespace bamboo {
 
 EventLoopThreadPool::EventLoopThreadPool(EventLoop *baseLoop,
@@ -14,8 +12,8 @@ void EventLoopThreadPool::start(const ThreadInitCallback &cb) {
     char buf[name_.size() + 32];
     snprintf(buf, sizeof buf, "%s%d", name_.c_str(), i);
     auto loop_thread = new EventLoopThread(cb, buf);
-    threads_.emplace_back(loop_thread);
     loops_.emplace_back(loop_thread->startLoop());
+    threads_.emplace_back(std::unique_ptr<EventLoopThread>(loop_thread));
   }
 
   if (threads_num_ == 0) {

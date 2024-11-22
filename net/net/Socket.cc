@@ -2,6 +2,7 @@
 
 #include "base/Logging.h"
 #include "net/InetAddress.h"
+#include "net/SocketOps.h"
 
 #include <netinet/in.h>
 #include <netinet/tcp.h>
@@ -16,11 +17,7 @@ Socket::~Socket() {
 }
 
 void Socket::bindAddress(const InetAddress &localaddr) {
-  auto ret =
-      bind(fd_, (sockaddr *)localaddr.getSockAddrInet(), sizeof(sockaddr_in));
-  if (ret < 0) {
-    LOG_SYSFATAL << "bind socket: " << fd_ << " failed";
-  }
+  sockets::bindOrDie(fd(), sockets::sockaddr_cast(localaddr.getSockAddrInet()));
 }
 
 void Socket::listen() {

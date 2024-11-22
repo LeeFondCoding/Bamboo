@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base/Macro.h"
+#include "net/EventLoopThread.h"
 
 #include <functional>
 #include <memory>
@@ -42,7 +43,7 @@ private:
   bool started_{false};
   int threads_num_{0};
   int next_{0};
-  std::vector<std::unique_ptr<EventLoopThread *>> threads_;
+  std::vector<std::unique_ptr<EventLoopThread>> threads_;
   std::vector<EventLoop *> loops_;
 };
 

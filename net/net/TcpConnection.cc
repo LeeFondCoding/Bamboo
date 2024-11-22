@@ -4,6 +4,7 @@
 #include "net/Channel.h"
 #include "net/EventLoop.h"
 #include "net/Socket.h"
+#include "net/SocketOps.h"
 
 #include <unistd.h>
 
@@ -68,7 +69,7 @@ void TcpConnection::sendInLoop(const std::string &message) {
 }
 
 void TcpConnection::sendInLoop(const char *message, size_t len) {
-  ssize_t nwrote = 0;
+  ssize_t wroten_bytes = 0;
   size_t remaining = len;
   bool fault_err = false;
   if (state_ == kDisconnected) {
@@ -76,15 +77,15 @@ void TcpConnection::sendInLoop(const char *message, size_t len) {
   }
 
   if (!channel_->isWriting() && output_buffer_.readableBytes() == 0) {
-    nwrote = ::write(channel_->fd(), message, len);
-    if (nwrote >= 0) {
-      remaining = len - nwrote;
+    wroten_bytes = ::write(channel_->fd(), message, len);
+    if (wroten_bytes >= 0) {
+      remaining = len - wroten_bytes;
       if (remaining == 0 && write_complete_call_back_) {
         loop_->queueInLoop(
             std::bind(write_complete_call_back_, shared_from_this()));
       }
     } else {
-      nwrote = 0;
+      wroten_bytes = 0;
       if (errno != EWOULDBLOCK) {
         LOG_ERROR << "TcpConnection";
         if (errno == EPIPE || errno == ECONNRESET) {
@@ -102,7 +103,7 @@ void TcpConnection::sendInLoop(const char *message, size_t len) {
                             old_len + remaining);
       loop_->queueInLoop([func]() { func(); });
     }
-    output_buffer_.append((char *)message + nwrote, remaining);
+    output_buffer_.append((char *)message + wroten_bytes, remaining);
     if (!channel_->isWriting()) {
       channel_->enableWriting();
     }
@@ -113,6 +114,20 @@ void TcpConnection::shutdown() {
   if (state_ == kConnected) {
     setState(kDisconnecting);
     loop_->runInLoop(std::bind(&TcpConnection::shutdownInLoop, this));
+  }
+}
+
+void TcpConnection::forceClose() {
+  if (state_ == kConnected || state_ == kDisconnecting) {
+    setState(kDisconnecting);
+    loop_->queueInLoop(std::bind(&TcpConnection::forceCloseInLoop, this));
+  }
+}
+
+void TcpConnection::forceCloseInLoop() {
+  loop_->assertInLoopThread();
+  if (state_ == kConnected || state_ == kDisconnecting) {
+    handleClose();
   }
 }
 
@@ -146,7 +161,8 @@ void TcpConnection::handleRead(TimeStamp receive_time) {
 void TcpConnection::handleWrite() {
   if (channel_->isWriting()) {
     int saved_err = 0;
-    auto n = output_buffer_.writeFd(channel_->fd(), &saved_err);
+    auto n = sockets::write(channel_->fd(), output_buffer_.peek(),
+                            output_buffer_.readableBytes());
     if (n > 0) {
       output_buffer_.retrieve(n);
       if (output_buffer_.readableBytes() == 0) {
@@ -178,17 +194,9 @@ void TcpConnection::handleClose() {
 }
 
 void TcpConnection::handleError() {
-  int opt_val;
-  socklen_t opt_len = sizeof opt_val;
-  int saved_err = 0;
-  if (::getsockopt(channel_->fd(), SOL_SOCKET, SO_ERROR, &opt_val, &opt_len) <
-      0) {
-    saved_err = errno;
-  } else {
-    saved_err = opt_val;
-  }
-  LOG_ERROR << "tcp connection fd = " << channel_->fd() << " error "
-            << saved_err;
+ int err = sockets::getSocketError(channel_->fd());
+  LOG_ERROR << "TcpConnection::handleError [" << name_
+            << "] - SO_ERROR = " << err << " " << strerror_tl(err);
 }
 
 void TcpConnection::connectDestroyed() {

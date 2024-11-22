@@ -7,6 +7,16 @@
 
 namespace bamboo {
 
+/// A buffer class modeled after org.jboss.netty.buffer.ChannelBuffer
+///
+/// @code
+/// +-------------------+------------------+------------------+
+/// | prependable bytes |  readable bytes  |  writable bytes  |
+/// |                   |     (CONTENT)    |                  |
+/// +-------------------+------------------+------------------+
+/// |                   |                  |                  |
+/// 0      <=      readerIndex   <=   writerIndex    <=     size
+/// @endcode
 class Buffer {
 public:
   static constexpr size_t kCheapPrepend = 8;
@@ -68,8 +78,6 @@ public:
   const char *beginWrite() const { return begin() + writer_index_; }
 
   ssize_t readFd(int fd, int *saveErrno);
-
-  ssize_t writeFd(int fd, int *saveErrno);
 
 private:
   char *begin() { return &*buffer_.begin(); }

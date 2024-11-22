@@ -2,31 +2,16 @@
 
 #include "base/Logging.h"
 #include "net/InetAddress.h"
-
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <unistd.h>
-
-namespace {
-static int newNonBlockSocket() {
-  int sockfd = ::socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC,
-                        IPPROTO_TCP);
-  if (sockfd < 0) {
-    bamboo::LOG_SYSFATAL << "Failed in socket";
-  }
-  return sockfd;
-}
-
-} // namespace
+#include "net/SocketOps.h"
 
 namespace bamboo {
 
 Acceptor::Acceptor(EventLoop *loop, const InetAddress &listen_addr,
                    bool reuse_port)
-    : loop_(loop), accept_socket_(newNonBlockSocket()),
+    : loop_(loop), accept_socket_(sockets::createNonBlockingSocketFd(listen_addr.family())),
       accept_channel_(loop_, accept_socket_.fd()) {
   accept_socket_.setReuseAddr(true);
-  accept_socket_.setReuseAddr(true);
+  accept_socket_.setReusePort(reuse_port);
   accept_socket_.bindAddress(listen_addr);
   accept_channel_.setReadCallback(std::bind(&Acceptor::handleRead, this));
 }
@@ -50,7 +35,7 @@ void Acceptor::handleRead() {
     if (new_connection_callback_) {
       new_connection_callback_(conn_fd, peer_addr);
     } else {
-      ::close(conn_fd);
+      sockets::close(conn_fd);
     }
   } else {
     LOG_SYSERR << "Acceptor::handleRead";

@@ -1,5 +1,3 @@
-#pragma once
-
 #include "net/TimerQueue.h"
 
 #include "base/Logging.h"
@@ -78,6 +76,7 @@ TimerQueue::~TimerQueue() {
   }
 }
 
+// memory leak???
 TimerId TimerQueue::addTimer(TimerCallback cb, TimeStamp when,
                              double interval) {
   auto timer = new Timer(std::move(cb), when, interval);

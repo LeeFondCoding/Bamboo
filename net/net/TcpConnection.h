@@ -35,17 +35,27 @@ public:
   void send(const std::string &buf);
   void send(Buffer *buf);
   void shutdown();
+
+  void forceClose();
+
+  void forceCloseInLoop();
+
   const std::string &name() const { return name_; }
+
   void setConnectionCallback(const ConnectionCallback &cb) {
     connection_call_back_ = cb;
   }
+
   void setMessageCallback(const MessageCallback &cb) {
     message_call_back_ = cb;
   }
+
   void setWriteCompleteCallback(const WriteCompleteCallback &cb) {
     write_complete_call_back_ = cb;
   }
+
   void setCloseCallback(const CloseCallback &cb) { close_callback_ = cb; }
+
   void setHighWaterMarkCallback(const HighWaterMarkCallback &cb,
                                 size_t highWaterMark) {
     high_water_mark_call_back_ = cb;
@@ -56,9 +66,9 @@ public:
 
   void connectDestroyed();
 
-  void setContext(HttpContext *context) { context_.reset(context); }
+  // void setContext(HttpContext *context) { context_.reset(context); }
 
-  HttpContext *getMutableContext() { return context_.get(); }
+  // HttpContext *getMutableContext() { return context_.get(); }
 
 private:
   enum StateE { kDisconnected = 0, kConnecting, kConnected, kDisconnecting };
@@ -80,13 +90,14 @@ private:
   void shutdownInLoop();
 
   EventLoop *loop_;
+  
   const std::string name_;
   std::atomic<int> state_;
   bool reading_;
 
   std::unique_ptr<Socket> socket_;
   std::unique_ptr<Channel> channel_;
-  std::unique_ptr<HttpContext> context_;
+  // std::unique_ptr<HttpContext> context_;
 
   const InetAddress local_addr_;
   const InetAddress peer_addr_;
@@ -97,6 +108,7 @@ private:
   HighWaterMarkCallback high_water_mark_call_back_;
   size_t high_water_mark_;
   CloseCallback close_callback_;
+  
   Buffer input_buffer_;
   Buffer output_buffer_;
 

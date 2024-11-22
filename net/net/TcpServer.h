@@ -3,7 +3,7 @@
 #include "base/Macro.h"
 #include "net/Buffer.h"
 #include "net/CallBack.h"
-#include "net/EventLoopThreadPool.h"
+
 
 #include <atomic>
 #include <unordered_map>
@@ -12,6 +12,7 @@ namespace bamboo {
 
 class Acceptor;
 class EventLoop;
+class EventLoopThreadPool;
 class InetAddress;
 
 class TcpServer {
@@ -57,10 +58,13 @@ private:
   using ConnectionMap = std::unordered_map<std::string, TcpConnectionPtr>;
 
   EventLoop *loop_;
+
   const std::string ip_port_;
   const std::string name_;
+
   std::unique_ptr<Acceptor> acceptor_;
   std::shared_ptr<EventLoopThreadPool> thread_pool_;
+  
   ConnectionCallback connection_callback_{};
   MessageCallback message_callback_{};
   WriteCompleteCallback write_complete_callback_;

@@ -65,7 +65,7 @@ void EpollPoller::updateChannel(Channel *channel) {
   if (index == kNew || index == kDeleted) {
     int fd = channel->fd();
     if (index == kNew) {
-      assert(channels_.find(fd) != channels_.end());
+      assert(channels_.find(fd) == channels_.end());
       channels_[fd] = channel;
     } else {
       assert(channels_.find(fd) != channels_.end());

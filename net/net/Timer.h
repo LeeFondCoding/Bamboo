@@ -28,7 +28,7 @@ public:
 
   void restart(TimeStamp now);
 
-  // number of timers
+  // number of created timers
   static int64_t numCreated() { return num_created_; }
 
 private:

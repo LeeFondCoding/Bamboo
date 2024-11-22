@@ -9,6 +9,7 @@ namespace bamboo {
 
 class EventLoop;
 
+// wrapper of listening socket
 class Acceptor {
 public:
   using NewConnectionCallback = std::function<void(int sockfd, const InetAddress&)>;
@@ -25,12 +26,16 @@ public:
   void listen();
 
 private:
+  // handle new connection
   void handleRead();
 
   EventLoop *loop_;
+
   Socket accept_socket_;
   Channel accept_channel_;
+
   NewConnectionCallback new_connection_callback_;
+
   bool listenning_{false};
 };
 } // namespace bamboo

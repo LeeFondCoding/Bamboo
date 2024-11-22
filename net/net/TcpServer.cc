@@ -3,6 +3,7 @@
 #include "base/Logging.h"
 #include "net/Acceptor.h"
 #include "net/EventLoop.h"
+#include "net/EventLoopThreadPool.h"
 #include "net/InetAddress.h"
 #include "net/TcpConnection.h"
 
@@ -50,7 +51,7 @@ void TcpServer::newConnection(int sockfd, const InetAddress &peer_addr) {
   }
 
   InetAddress local_addr(local);
-  auto conn = std::make_shared<TcpConnection>(io_loop, sockfd, conn_name,
+  auto conn = std::make_shared<TcpConnection>(io_loop, conn_name, sockfd,
                                               local_addr, peer_addr);
   connections_.emplace(conn_name, conn);
 
@@ -63,14 +64,15 @@ void TcpServer::newConnection(int sockfd, const InetAddress &peer_addr) {
 }
 
 void TcpServer::removeConnection(const TcpConnectionPtr &conn) {
-    loop_->runInLoop(std::bind(&TcpServer::removeConnnectionInLoop, this, conn));
+  loop_->runInLoop(std::bind(&TcpServer::removeConnnectionInLoop, this, conn));
 }
 
 void TcpServer::removeConnnectionInLoop(const TcpConnectionPtr &conn) {
-    LOG_INFO << "TcpServer::removeConnection [" << name_ << "] - connection " << conn->name();
-    connections_.erase(conn->name());
-    auto io_loop = conn->getLoop();
-    io_loop->queueInLoop(std::bind(&TcpConnection::connectDestroyed, conn)); 
+  LOG_INFO << "TcpServer::removeConnection [" << name_ << "] - connection "
+           << conn->name();
+  connections_.erase(conn->name());
+  auto io_loop = conn->getLoop();
+  io_loop->queueInLoop(std::bind(&TcpConnection::connectDestroyed, conn));
 }
 
 } // namespace bamboo

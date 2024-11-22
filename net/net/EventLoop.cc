@@ -4,6 +4,7 @@
 #include "base/Logging.h"
 #include "net/Channel.h"
 #include "net/Poller.h"
+#include "net/TimerQueue.h"
 
 #include <assert.h>
 #include <sys/eventfd.h>
@@ -16,7 +17,7 @@ thread_local EventLoop *t_loopInThisThread = nullptr;
 
 constexpr int kPollTimeMs = 1000;
 
-int creatEventfd() {
+int createEventfd() {
   int fd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
   if (fd < 0) {
     LOG_SYSFATAL << "failed in eventfd";
@@ -27,7 +28,7 @@ int creatEventfd() {
 
 EventLoop::EventLoop()
     : tid_(CurrentThread::tid()), poller_(Poller::newDefaultPoller(this)),
-      wakeup_fd_(creatEventfd()),
+      wakeup_fd_(createEventfd()),
       wakeup_channel_(new Channel(this, wakeup_fd_)),
       current_active_channel_(nullptr) {
   LOG_DEBUG << "EventLoop created " << this << " in thread " << tid_;
@@ -90,11 +91,35 @@ void EventLoop::runInLoop(Functor func) {
   }
 }
 
+void EventLoop::queueInLoop(Functor func) {
+  std::unique_lock<std::mutex> lck(mutex_);
+  pending_functors_.emplace_back(std::move(func));
+  lck.unlock();
+
+  if (!isInLoopThread() || calling_pending_functors) {
+    wakeup();
+  }
+}
+
+TimerId EventLoop::runAt(const TimeStamp &time, TimerCallback cb) {
+  return timer_queue_->addTimer(std::move(cb), time, 0.0);
+}
+
+TimerId EventLoop::runAfter(double delay, TimerCallback cb) {
+  TimeStamp time(addTime(TimeStamp::now(), delay));
+  return runAt(time, std::move(cb));
+}
+
+TimerId EventLoop::runEvery(double interval, TimerCallback cb) {
+  TimeStamp time(addTime(TimeStamp::now(), interval));
+  return timer_queue_->addTimer(std::move(cb), time, interval);
+}
+
 void EventLoop::wakeup() {
   uint64_t one = 1;
-  ssize_t n = write(wakeup_fd_, &one, sizeof one);
-  if (n != sizeof(one)) {
-    LOG_SYSERR << "EventLoop::wakeup() writes " << n << " bytes instead of "
+  ssize_t wroten_bytes = write(wakeup_fd_, &one, sizeof one);
+  if (wroten_bytes != sizeof(one)) {
+    LOG_SYSERR << "EventLoop::wakeup() writes " << wroten_bytes << " bytes instead of "
                << sizeof(one);
   }
 }
@@ -123,9 +148,9 @@ bool EventLoop::isInLoopThread() const { return CurrentThread::tid() == tid_; }
 
 void EventLoop::handleRead() {
   uint64_t one = 1;
-  ssize_t n = read(wakeup_fd_, &one, sizeof one);
-  if (n != sizeof(one)) {
-    LOG_SYSERR << "EventLoop::handleRead() reads " << n << " bytes instead of "
+  ssize_t read_bytes = read(wakeup_fd_, &one, sizeof one);
+  if (read_bytes != sizeof(one)) {
+    LOG_SYSERR << "EventLoop::handleRead() reads " << read_bytes << " bytes instead of "
                << sizeof(one);
   }
 }

@@ -17,9 +17,9 @@ public:
 
   Channel(EventLoop *loop, int fd);
 
-  ~Channel() = default;
-
   DISALLOW_COPY(Channel);
+
+  ~Channel();
 
   void handleEvent(TimeStamp receiveTime);
 
@@ -34,7 +34,7 @@ public:
   void tie(const std::shared_ptr<void> &);
 
   int fd() const { return fd_; }
-  
+
   int events() const { return events_; }
 
   void setRevents(int revents) { revents_ = revents; }
@@ -71,15 +71,15 @@ public:
   bool isNoneEvent() const { return events_ == kNoneEvent; }
 
   int index() { return index_; }
-  
+
   void setIndex(int idx) { index_ = idx; }
 
   EventLoop *ownerLoop() { return loop_; }
 
   void remove();
 
+  // for debug
   std::string reventsToString() const;
-
   std::string eventsToString() const;
 
 private:
@@ -92,16 +92,19 @@ private:
   static const int kNoneEvent;
   static const int kReadEvent;
   static const int kWriteEvent;
-  
-  EventLoop *loop_;
+
+
   const int fd_;
   int events_{0};
   int revents_{0};
   int index_{-1};
-  std::weak_ptr<void> tie_;
   bool tied_{false};
-  bool event_handing_;
-  bool added_to_loop_;
+  bool event_handing_{false};
+  bool added_to_loop_{false};
+  bool log_hup_{true};
+
+  EventLoop *loop_;
+  std::weak_ptr<void> tie_;
 
   ReadEventCallback read_callback_;
   EventCallback write_callback_;

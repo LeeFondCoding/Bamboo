@@ -4,6 +4,7 @@
 #include "base/Logging.h"
 #include "net/Channel.h"
 #include "net/Poller.h"
+#include "net/SocketOps.h"
 #include "net/TimerQueue.h"
 
 #include <assert.h>
@@ -96,7 +97,7 @@ void EventLoop::queueInLoop(Functor func) {
   pending_functors_.emplace_back(std::move(func));
   lck.unlock();
 
-  if (!isInLoopThread() || calling_pending_functors) {
+  if (!isInLoopThread() || calling_pending_functors_) {
     wakeup();
   }
 }
@@ -115,12 +116,14 @@ TimerId EventLoop::runEvery(double interval, TimerCallback cb) {
   return timer_queue_->addTimer(std::move(cb), time, interval);
 }
 
+void EventLoop::cancel(TimerId timerId) { timer_queue_->cancel(timerId); }
+
 void EventLoop::wakeup() {
   uint64_t one = 1;
   ssize_t wroten_bytes = write(wakeup_fd_, &one, sizeof one);
   if (wroten_bytes != sizeof(one)) {
-    LOG_SYSERR << "EventLoop::wakeup() writes " << wroten_bytes << " bytes instead of "
-               << sizeof(one);
+    LOG_SYSERR << "EventLoop::wakeup() writes " << wroten_bytes
+               << " bytes instead of " << sizeof(one);
   }
 }
 
@@ -148,15 +151,16 @@ bool EventLoop::isInLoopThread() const { return CurrentThread::tid() == tid_; }
 
 void EventLoop::handleRead() {
   uint64_t one = 1;
-  ssize_t read_bytes = read(wakeup_fd_, &one, sizeof one);
+  ssize_t read_bytes = sockets::read(wakeup_fd_, &one, sizeof one);
   if (read_bytes != sizeof(one)) {
-    LOG_SYSERR << "EventLoop::handleRead() reads " << read_bytes << " bytes instead of "
-               << sizeof(one);
+    LOG_SYSERR << "EventLoop::handleRead() reads " << read_bytes
+               << " bytes instead of " << sizeof(one);
   }
 }
 
 void EventLoop::doPendingFunctors() {
   std::vector<Functor> functors;
+  calling_pending_functors_ = true;
   {
     std::lock_guard<std::mutex> guard(mutex_);
     functors.swap(pending_functors_);
@@ -165,5 +169,6 @@ void EventLoop::doPendingFunctors() {
   for (const auto &func : functors) {
     func();
   }
+  calling_pending_functors_ = false;
 }
 } // namespace bamboo

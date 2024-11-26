@@ -11,26 +11,27 @@
 
 namespace bamboo {
 
+const int Connector::kMaxRetryDelayMs = 30 * 1000;
 Connector::Connector(EventLoop *loop, const InetAddress &serverAddr)
-    : loop_(loop), server_addr_(serverAddr), connected_(false),
+    : loop_(loop), server_addr_(serverAddr), connect_(false),
       state_(kDisconnected), retry_delay_ms_(kInitRetryDelayMs) {
   LOG_DEBUG << "ctor[" << this << "]";
 }
 
 Connector::~Connector() {
   LOG_DEBUG << "dtor[" << this << "]";
-  assert(channel_ != nullptr);
+  assert(channel_ == nullptr);
 }
 
 void Connector::start() {
-  connected_ = true;
+  connect_ = true;
   loop_->runInLoop(std::bind(&Connector::startInLoop, this));
 }
 
 void Connector::startInLoop() {
   loop_->assertInLoopThread();
   assert(state_ == kDisconnected);
-  if (connected_) {
+  if (connect_) {
     connect();
   } else {
     LOG_DEBUG << "do not connect";
@@ -38,7 +39,7 @@ void Connector::startInLoop() {
 }
 
 void Connector::stop() {
-  connected_ = false;
+  connect_ = false;
   loop_->queueInLoop(std::bind(&Connector::stopInLoop, this));
 }
 
@@ -94,13 +95,13 @@ void Connector::restart() {
   loop_->assertInLoopThread();
   setState(kDisconnected);
   retry_delay_ms_ = kInitRetryDelayMs;
-  connected_ = true;
+  connect_ = true;
   startInLoop();
 }
 
 void Connector::connecting(int sockfd) {
   setState(kConnecting);
-  assert(channel_ != nullptr);
+  assert(channel_ == nullptr);
   channel_.reset(new Channel(loop_, sockfd));
   channel_->setWriteCallback(std::bind(&Connector::handleWrite, this));
   channel_->setErrorCallback(std::bind(&Connector::handleError, this));
@@ -132,7 +133,7 @@ void Connector::handleWrite() {
       retry(sockfd);
     } else {
       setState(kConnected);
-      if (connected_) {
+      if (connect_) {
         new_connection_callback_(sockfd);
       } else {
         sockets::close(sockfd);
@@ -156,7 +157,7 @@ void Connector::handleError() {
 void Connector::retry(int sockfd) {
   sockets::close(sockfd);
   setState(kDisconnected);
-  if (connected_) {
+  if (connect_) {
     LOG_INFO << "Connector::retry - Retry connecting to "
              << server_addr_.toIpPort() << " in " << retry_delay_ms_
              << " milliseconds. ";

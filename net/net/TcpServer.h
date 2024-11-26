@@ -4,7 +4,6 @@
 #include "net/Buffer.h"
 #include "net/CallBack.h"
 
-
 #include <atomic>
 #include <unordered_map>
 
@@ -18,7 +17,7 @@ class InetAddress;
 class TcpServer {
 public:
   using ThreadInitCallback = std::function<void(EventLoop *)>;
-  
+
   enum Option { kNoReusePort, kReusePort };
 
   TcpServer(EventLoop *loop, const InetAddress &listenAddr,
@@ -46,9 +45,9 @@ public:
 
   void start();
 
-  std::string name() const { return name_; }
+  const std::string &name() const { return name_; }
 
-  std::string ipPort() const { return ip_port_; }
+  const std::string &ipPort() const { return ip_port_; }
 
 private:
   void newConnection(int sockfd, const InetAddress &peerAddr);
@@ -64,9 +63,9 @@ private:
 
   std::unique_ptr<Acceptor> acceptor_;
   std::shared_ptr<EventLoopThreadPool> thread_pool_;
-  
-  ConnectionCallback connection_callback_{};
-  MessageCallback message_callback_{};
+
+  ConnectionCallback connection_callback_;
+  MessageCallback message_callback_;
   WriteCompleteCallback write_complete_callback_;
   ThreadInitCallback thread_init_callback_;
 

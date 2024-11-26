@@ -17,9 +17,11 @@ public:
 
   Poller(EventLoop *loop);
 
-  virtual ~Poller() = default;
+  DISALLOW_COPY(Poller)
 
-  virtual TimeStamp poll(int timeoutMs, ChannelList *activeChannels) = 0;
+  virtual ~Poller();
+
+  virtual TimeStamp poll(int timeout_ms, ChannelList *active_channels) = 0;
 
   virtual void updateChannel(Channel *channel) = 0;
 
@@ -30,11 +32,11 @@ public:
   // return Poller should RAII
   static Poller *newDefaultPoller(EventLoop *loop);
 
-  void assertInLoopThread();
+  void assertInLoopThread() const;
 
 protected:
   using ChannelMap = std::unordered_map<int, Channel *>;
-  
+
   ChannelMap channels_;
 
 private:

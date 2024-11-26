@@ -1,3 +1,5 @@
+#pragma once
+
 // Macros to disable copying and moving
 #define DISALLOW_COPY(cname)                                    \
   cname(const cname &) = delete;                   /* NOLINT */ \

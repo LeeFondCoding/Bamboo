@@ -29,11 +29,17 @@ public:
   DISALLOW_COPY(TcpConnection)
 
   EventLoop *getLoop() const { return loop_; }
+
   const InetAddress &localAddress() const { return local_addr_; }
+
   const InetAddress &peerAddress() const { return peer_addr_; }
-  bool connected() const { return state_ == StateE::kConnected; }
+
+  bool connected() const { return state_ == kConnected; }
+
   void send(const std::string &buf);
+
   void send(Buffer *buf);
+
   void shutdown();
 
   void forceClose();
@@ -74,6 +80,8 @@ private:
   enum StateE { kDisconnected = 0, kConnecting, kConnected, kDisconnecting };
 
   void setState(StateE s) { state_ = s; }
+
+  const char* stateToString() const;
 
   void handleRead(TimeStamp receiveTime);
 

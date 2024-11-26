@@ -33,7 +33,7 @@ public:
 
 private:
   enum States { kDisconnected, kConnecting, kConnected };
-  static constexpr int kMaxRetryDelayMs = 30 * 1000;
+  static const int kMaxRetryDelayMs;
   static constexpr int kInitRetryDelayMs = 500;
 
   void setState(States s) { state_ = s; }
@@ -56,7 +56,7 @@ private:
 
   void resetChannel();
 
-  bool connected_;
+  bool connect_;
   int retry_delay_ms_;
   States state_;
   EventLoop *loop_;

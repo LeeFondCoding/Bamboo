@@ -1,11 +1,20 @@
 #include "net/Buffer.h"
 
+#include "assert.h"
 #include <sys/uio.h>
 #include <unistd.h>
 
 namespace bamboo {
 
 const char Buffer::kCRLF[] = "\r\n";
+
+Buffer::Buffer(size_t initial_size)
+    : reader_index_(kCheapPrepend), writer_index_(kCheapPrepend),
+      buffer_(kCheapPrepend + initial_size) {
+  assert(readableBytes() == 0);
+  assert(writeableBytes() == initial_size);
+  assert(prependableBytes() == kCheapPrepend);
+}
 
 ssize_t Buffer::readFd(int fd, int *saveErrno) {
   char extrabuf[65536] = {0};
@@ -29,6 +38,5 @@ ssize_t Buffer::readFd(int fd, int *saveErrno) {
   }
   return n;
 }
-
 
 } // namespace bamboo

@@ -6,37 +6,50 @@
 #include "net/Socket.h"
 #include "net/SocketOps.h"
 
+#include <assert.h>
 #include <unistd.h>
 
 namespace bamboo {
 
-namespace {
-
 static EventLoop *checkLoop(EventLoop *loop) {
   if (loop == nullptr) {
-    LOG_FATAL << "main loop is null";
+    LOG_FATAL << "loop is null";
   }
   return loop;
 }
 
-} // namespace
+void defaultConnectionCallback(const TcpConnectionPtr &conn) {
+  LOG_TRACE << conn->localAddress().toIpPort() << " -> "
+            << conn->peerAddress().toIpPort() << " is "
+            << (conn->connected() ? "UP" : "DOWN");
+}
+
+void defaultMessageCallback(const TcpConnectionPtr &conn, Buffer *buffer,
+                            TimeStamp receiveTime) {
+  buffer->retrieveAll();
+}
+
 TcpConnection::TcpConnection(EventLoop *loop, const std::string &name,
                              int sockfd, const InetAddress &localAddr,
                              const InetAddress &peerAddr)
-    : loop_(checkLoop(loop)), name_(name), socket_(new Socket(sockfd)),
-      channel_(new Channel(loop, sockfd)), local_addr_(localAddr),
-      peer_addr_(peerAddr), high_water_mark_(kHighWaterMark) {
+    : loop_(checkLoop(loop)), name_(name), state_(kConnecting),
+      socket_(new Socket(sockfd)), channel_(new Channel(loop, sockfd)),
+      local_addr_(localAddr), peer_addr_(peerAddr),
+      high_water_mark_(kHighWaterMark) {
   channel_->setReadCallback(
       std::bind(&TcpConnection::handleRead, this, std::placeholders::_1));
   channel_->setWriteCallback(std::bind(&TcpConnection::handleWrite, this));
   channel_->setCloseCallback(std::bind(&TcpConnection::handleClose, this));
   channel_->setCloseCallback(std::bind(&TcpConnection::handleError, this));
-  LOG_INFO << "TcpConnection created " << name_ << " at fd=" << sockfd;
+  LOG_DEBUG << "TcpConnection::ctor[" << name_ << "] at " << this
+            << " fd=" << sockfd;
   socket_->setKeepAlive(true);
 }
 
 TcpConnection::~TcpConnection() {
-  LOG_INFO << "TcpConnection delete " << name_ << " at fd=" << channel_->fd();
+  LOG_DEBUG << "TcpConnection::dtor[" << name_ << "] at " << this
+            << " fd=" << channel_->fd() << " state=" << stateToString();
+  assert(state_ == kDisconnected);
 }
 
 void TcpConnection::send(const std::string &buf) {
@@ -138,10 +151,38 @@ void TcpConnection::shutdownInLoop() {
 }
 
 void TcpConnection::connectEstablished() {
+  loop_->assertInLoopThread();
+  assert(state_ == kConnecting);
   setState(kConnected);
   channel_->tie(shared_from_this());
   channel_->enableReading();
   connection_call_back_(shared_from_this());
+}
+
+void TcpConnection::connectDestroyed() {
+  loop_->assertInLoopThread();
+  if (state_ == kConnected) {
+    setState(kDisconnected);
+    channel_->disableAll();
+
+    connection_call_back_(shared_from_this());
+  }
+  channel_->remove();
+}
+
+const char *TcpConnection::stateToString() const {
+  switch (state_.load()) {
+  case kDisconnected:
+    return "kDisconnected";
+  case kConnecting:
+    return "kConnecting";
+  case kConnected:
+    return "kConnected";
+  case kDisconnecting:
+    return "kDisconnecting";
+  default:
+    return "unknown state";
+  }
 }
 
 void TcpConnection::handleRead(TimeStamp receive_time) {
@@ -152,15 +193,15 @@ void TcpConnection::handleRead(TimeStamp receive_time) {
   } else if (n == 0) {
     handleClose();
   } else {
-    saved_err = errno;
-    LOG_ERROR << "read error";
+    errno = saved_err;
+    LOG_SYSERR << "read error";
     handleError();
   }
 }
 
 void TcpConnection::handleWrite() {
+  loop_->assertInLoopThread();
   if (channel_->isWriting()) {
-    int saved_err = 0;
     auto n = sockets::write(channel_->fd(), output_buffer_.peek(),
                             output_buffer_.readableBytes());
     if (n > 0) {
@@ -185,7 +226,8 @@ void TcpConnection::handleWrite() {
 }
 
 void TcpConnection::handleClose() {
-  LOG_INFO << "TcpConnection fd " << channel_->fd() << " is down";
+  loop_->assertInLoopThread();
+  LOG_TRACE << "fd " << channel_->fd() << " state = " << stateToString();
   setState(kDisconnected);
   channel_->disableAll();
   auto conn = shared_from_this();
@@ -194,18 +236,9 @@ void TcpConnection::handleClose() {
 }
 
 void TcpConnection::handleError() {
- int err = sockets::getSocketError(channel_->fd());
+  int err = sockets::getSocketError(channel_->fd());
   LOG_ERROR << "TcpConnection::handleError [" << name_
             << "] - SO_ERROR = " << err << " " << strerror_tl(err);
-}
-
-void TcpConnection::connectDestroyed() {
-  if (state_ == kConnected) {
-    setState(kDisconnected);
-    channel_->disableAll();
-    connection_call_back_(shared_from_this());
-  }
-  channel_->remove();
 }
 
 } // namespace bamboo

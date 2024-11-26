@@ -1,5 +1,6 @@
 #pragma once
 
+#include "base/Macro.h"
 #include "base/TimeStamp.h"
 #include "net/CallBack.h"
 #include "net/TimerId.h"
@@ -23,7 +24,10 @@ public:
 
   EventLoop();
 
+  DISALLOW_COPY(EventLoop)
+
   ~EventLoop();
+
   void loop();
   void quit();
   TimeStamp pollReturnTime() const;
@@ -36,7 +40,10 @@ public:
   TimerId runAfter(double delay, TimerCallback cb);
   // every interval run timer
   TimerId runEvery(double interval, TimerCallback cb);
+  // cancel timer
+  void cancel(TimerId timerId);
 
+  // run the loop in next
   void wakeup();
 
   void updateChannel(Channel *channel);
@@ -47,12 +54,13 @@ public:
   bool isInLoopThread() const;
 
 private:
+  // for wake up event
   void handleRead();
   void doPendingFunctors();
 
   std::atomic<bool> looping_{false};
   std::atomic<bool> quit_{false};
-  std::atomic<bool> calling_pending_functors{false};
+  std::atomic<bool> calling_pending_functors_{false};
 
   pid_t tid_;
   TimeStamp pool_return_time_;
@@ -62,9 +70,11 @@ private:
 
   int wakeup_fd_;
   std::unique_ptr<Channel> wakeup_channel_;
+
   std::vector<Channel *> active_channels_;
   Channel *current_active_channel_;
-  std::vector<Functor> pending_functors_;
+
   std::mutex mutex_;
+  std::vector<Functor> pending_functors_;// guard by mutex_
 };
 } // namespace bamboo

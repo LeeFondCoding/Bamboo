@@ -1,7 +1,8 @@
 #pragma once
 
+#include "base/Macro.h"
+
 #include <algorithm>
-#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -22,9 +23,9 @@ public:
   static constexpr size_t kCheapPrepend = 8;
   static constexpr size_t kInitialSize = 1024;
 
-  explicit Buffer(size_t initialSize = kInitialSize)
-      : reader_index_(kCheapPrepend), writer_index_(kCheapPrepend),
-        buffer_(kCheapPrepend + initialSize) {}
+  explicit Buffer(size_t initial_size = kInitialSize);
+
+  DISALLOW_COPY(Buffer)
 
   size_t readableBytes() const { return writer_index_ - reader_index_; }
 
@@ -71,9 +72,7 @@ public:
 
   void append(const std::string &str) { append(str.data(), str.size()); }
 
-  char *beginWrite() {
-    return begin() + writer_index_;
-  }
+  char *beginWrite() { return begin() + writer_index_; }
 
   const char *beginWrite() const { return begin() + writer_index_; }
 

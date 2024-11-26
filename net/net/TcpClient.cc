@@ -20,7 +20,13 @@ void removeConnector(const ConnectorPtr &connector) {}
 
 TcpClient::TcpClient(EventLoop *loop, const InetAddress &serverAddr,
                      const std::string &nameArg)
-    : loop_(loop), name_(nameArg), connector_(new Connector(loop, serverAddr)) {
+    : loop_(loop), name_(nameArg), connector_(new Connector(loop, serverAddr)),
+      connectionCallback_(defaultConnectionCallback),
+      messageCallback_(defaultMessageCallback) {
+  connector_->setNewConnectionCallback(
+      std::bind(&TcpClient::newConnection, this, std::placeholders::_1));
+  LOG_INFO << "TcpClient::~TcpClient [" << name_ << "] - connector "
+            << connector_.get();
 }
 
 TcpClient::~TcpClient() {

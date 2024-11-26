@@ -7,13 +7,22 @@
 #include "net/InetAddress.h"
 #include "net/TcpConnection.h"
 
+#include <assert.h>
+
 namespace bamboo {
 
 TcpServer::TcpServer(EventLoop *loop, const InetAddress &listen_addr,
                      const std::string &name, Option option)
     : loop_(loop), ip_port_(listen_addr.toIpPort()), name_(name),
-      acceptor_(new Acceptor(loop, listen_addr, option == kReusePort)),
-      thread_pool_(new EventLoopThreadPool(loop, name_)) {}
+      acceptor_(new Acceptor(loop, listen_addr, kReusePort)),
+      thread_pool_(new EventLoopThreadPool(loop, name_)),
+      connection_callback_(defaultConnectionCallback),
+      message_callback_(defaultMessageCallback) {
+  assert(loop_ != nullptr);
+  acceptor_->setNewConnectionCallback(std::bind(&TcpServer::newConnection, this,
+                                                std::placeholders::_1,
+                                                std::placeholders::_2));
+}
 
 TcpServer::~TcpServer() {
   for (auto &item : connections_) {
@@ -24,18 +33,21 @@ TcpServer::~TcpServer() {
 }
 
 void TcpServer::setThreadNum(int threads_num) {
+  assert(threads_num >= 0);
   thread_pool_->setThreadNum(threads_num);
 }
 
 void TcpServer::start() {
-  if (started_++ == 0) {
+  if (started_.exchange(1) == 0) {
     thread_pool_->start(thread_init_callback_);
 
+    assert(!acceptor_->listening());
     loop_->runInLoop(std::bind(&Acceptor::listen, acceptor_.get()));
   }
 }
 
 void TcpServer::newConnection(int sockfd, const InetAddress &peer_addr) {
+  loop_->assertInLoopThread();
   auto io_loop = thread_pool_->getNextLoop();
   char buf[64] = {0};
   snprintf(buf, sizeof(buf), "-%s#%d", ip_port_.c_str(), next_conn_id_++);
@@ -43,14 +55,7 @@ void TcpServer::newConnection(int sockfd, const InetAddress &peer_addr) {
   LOG_INFO << "TcpServer::newConnection [" << name_ << "] - new connection ["
            << conn_name << "] from " << peer_addr.toIpPort();
 
-  sockaddr_in local;
-  bzero(&local, sizeof(local));
-  socklen_t addr_len = sizeof(local);
-  if (::getsockname(sockfd, (sockaddr *)&local, &addr_len) < 0) {
-    LOG_SYSFATAL << "sockets::getLocalAddr";
-  }
-
-  InetAddress local_addr(local);
+  InetAddress local_addr(sockets::getLocalAddr(sockfd));
   auto conn = std::make_shared<TcpConnection>(io_loop, conn_name, sockfd,
                                               local_addr, peer_addr);
   connections_.emplace(conn_name, conn);
@@ -70,7 +75,9 @@ void TcpServer::removeConnection(const TcpConnectionPtr &conn) {
 void TcpServer::removeConnnectionInLoop(const TcpConnectionPtr &conn) {
   LOG_INFO << "TcpServer::removeConnection [" << name_ << "] - connection "
            << conn->name();
-  connections_.erase(conn->name());
+  if (connections_.erase(conn->name()) != 1) {
+    assert(false);
+  }
   auto io_loop = conn->getLoop();
   io_loop->queueInLoop(std::bind(&TcpConnection::connectDestroyed, conn));
 }

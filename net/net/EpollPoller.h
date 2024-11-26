@@ -6,6 +6,7 @@ struct epoll_event;
 
 namespace bamboo {
 
+// wrapper of epoll
 class EpollPoller : public Poller {
 public:
 EpollPoller(EventLoop *loop);

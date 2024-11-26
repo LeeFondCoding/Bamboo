@@ -22,6 +22,8 @@ public:
 
   std::string set(const std::string &key, const std::string &value);
 
+  std::string del(const std::string &key);
+
   std::string listAllKVs();
 
 private:

@@ -10,6 +10,7 @@ extern thread_local int t_cachedTid;
 
 void cacheTid();
 
+// return current thread id
 inline int tid() {
   if (__builtin_expect(t_cachedTid == 0, 0)) {
     cacheTid();

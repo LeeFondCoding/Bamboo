@@ -1,6 +1,6 @@
 #pragma once
 
-#include "manager/DatabaseManager.h"
+#include "control/DatabaseManager.h"
 
 namespace bamboo {
 class ClientSession {

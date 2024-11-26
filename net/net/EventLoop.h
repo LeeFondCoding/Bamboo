@@ -28,10 +28,20 @@ public:
 
   ~EventLoop();
 
+  // loop forever
   void loop();
   void quit();
   TimeStamp pollReturnTime() const;
+
+  // Runs callback immediately in the loop thread.
+  // It wakes up the loop, and run the cb.
+  // If in the same loop thread, cb is run within the function.
+  // Safe to call from other threads.
   void runInLoop(Functor func);
+
+  // Queues callback in the loop thread.
+  // Runs after finish pooling.
+  // Safe to call from other threads.
   void queueInLoop(Functor func);
 
   // at some time point run timer
@@ -43,13 +53,14 @@ public:
   // cancel timer
   void cancel(TimerId timerId);
 
-  // run the loop in next
+  // wake up this sleeping loop/thread
   void wakeup();
 
   void updateChannel(Channel *channel);
   void removeChannel(Channel *channel);
   bool hasChannel(Channel *channel);
   
+  // abort if not in corresponding thread
   void assertInLoopThread();
   bool isInLoopThread() const;
 

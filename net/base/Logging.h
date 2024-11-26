@@ -26,8 +26,6 @@ public:
   Logger(const char *file, int line, bool toAbort);
   ~Logger();
 
-  void debugImplFormatTime() { impl_.formatTime(); }
-
 private:
   class Impl {
   public:
@@ -75,6 +73,8 @@ inline Logger::LogLevel logLevel() { return g_logLevel; }
 #define __SHORT_FILE__                                                         \
   (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
+// translate error code to error message
+// thread safe
 const char *strerror_tl(int saved_err);
 
 } // namespace bamboo

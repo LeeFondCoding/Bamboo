@@ -17,6 +17,8 @@ public:
   AsyncLogging(const std::string &basename, size_t roll_size,
                int flush_interval = 3);
 
+  DISALLOW_COPY(AsyncLogging)
+
   ~AsyncLogging() {
     if (running_) {
       stop();

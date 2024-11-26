@@ -10,6 +10,8 @@ namespace bamboo {
 
 class EventLoop;
 
+// handle events on fd(socket, timefd, eventfd)
+// run callback function according to its events
 class Channel {
 public:
   using EventCallback = std::function<void()>;
@@ -31,6 +33,7 @@ public:
 
   void setErrorCallback(EventCallback cb) { err_callback_ = std::move(cb); }
 
+  // tie this channle to according TcpConnection
   void tie(const std::shared_ptr<void> &);
 
   int fd() const { return fd_; }

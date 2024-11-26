@@ -7,7 +7,6 @@
 
 namespace bamboo {
 
-// 
 class CountDownLatch {
 public:
     explicit CountDownLatch(int count);

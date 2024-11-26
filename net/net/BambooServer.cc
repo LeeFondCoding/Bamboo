@@ -1,8 +1,8 @@
 #include "net/BambooServer.h"
 
 #include "base/Logging.h"
-#include "manager/ClientSession.h"
-#include "manager/DatabaseManager.h"
+#include "control/ClientSession.h"
+#include "control/DatabaseManager.h"
 #include "net/TcpConnection.h"
 
 namespace bamboo {

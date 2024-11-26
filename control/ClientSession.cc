@@ -1,4 +1,4 @@
-#include "manager/ClientSession.h"
+#include "control/ClientSession.h"
 
 #include <stdexcept>
 
@@ -31,6 +31,8 @@ std::string ClientSession::processCommand(const std::string &cmd,
       std::string value = args.substr(endPos + 1);
       return db_manager_->set(key, value) + "\r\n";
     }
+  } else if (cmd == "DEL") {
+    return db_manager_->del(args) + "\r\n";
   } else if (cmd == "LIST") {
     return db_manager_->listAllKVs() + "\r\n";
   } else if (cmd == "CURRENTDB") {
@@ -45,12 +47,14 @@ std::string ClientSession::processCommand(const std::string &cmd,
 }
 
 std::string ClientSession::showHelp() {
-  return R"(Available commands:
-        SELECT <index>      - Select the database instance by index (0-9)
-        GET <key>           - Get the value associated with the key in the current database
-        SET <key> <value>   - Set the value for the key in the current database
-        LIST                - List all key-value pairs in the current database
-        CURRENTDB           - Show the current selected database index
-        HELP                - Show this help message\r\n)";
+  return "Available commands:\r\n"
+         "SELECT <index> - Select the database instance by index (0-9)\r\n"
+         "GET <key>      - Get the value associated with the key in the "
+         "current database\r\n"
+         "SET <key> <value> - Set the value for the key in the current "
+         "database\r\n"
+         "LIST           - List all key-value pairs in the current database\r\n"
+         "CURRENTDB      - Show the current selected database index\r\n"
+         "HELP           - Show this help message\r\n";
 }
 } // namespace bamboo

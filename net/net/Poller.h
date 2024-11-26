@@ -11,6 +11,7 @@ namespace bamboo {
 class Channel;
 class EventLoop;
 
+// abstract class for Epoll
 class Poller {
 public:
   using ChannelList = std::vector<Channel *>;

@@ -33,7 +33,7 @@ void BambooClient::onMessage(const TcpConnectionPtr &conn, Buffer *buf,
 }
 
 void BambooClient::promptUser(const TcpConnectionPtr &conn) {
-  std::cout << "Enter command : ";
+  std::cout << "Enter > ";
   std::string input;
   std::getline(std::cin, input);
 

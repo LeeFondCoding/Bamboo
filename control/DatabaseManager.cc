@@ -1,4 +1,4 @@
-#include "manager/DatabaseManager.h"
+#include "control/DatabaseManager.h"
 
 #include <leveldb/db.h>
 #include <sstream>
@@ -53,6 +53,16 @@ std::string DatabaseManager::set(const std::string &key,
                                  const std::string &value) {
   leveldb::Status s =
       dbs_[current_db_index_]->Put(leveldb::WriteOptions(), key, value);
+  if (s.ok()) {
+    return "OK";
+  } else {
+    return "ERROR";
+  }
+}
+
+std::string DatabaseManager::del(const std::string &key) {
+  leveldb::Status s = dbs_[current_db_index_]->Delete(leveldb::WriteOptions(),
+                                                      key);
   if (s.ok()) {
     return "OK";
   } else {

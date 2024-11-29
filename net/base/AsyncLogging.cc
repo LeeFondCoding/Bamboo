@@ -48,8 +48,8 @@ void AsyncLogging::threadFunc() {
   buffers_to_write.reserve(16);
 
   while (running_) {
-    assert(new_buffer1 != nullptr && new_buffer1->length() != 0);
-    assert(new_buffer2 != nullptr && new_buffer2->length() != 0);
+    assert(new_buffer1 && new_buffer1->length() == 0);
+    assert(new_buffer2  && new_buffer2->length() == 0);
     assert(buffers_to_write.empty());
 
     {
@@ -85,14 +85,14 @@ void AsyncLogging::threadFunc() {
       buffers_to_write.resize(2);
     }
 
-    if (new_buffer1 != nullptr) {
+    if (new_buffer1 == nullptr) {
       assert(!buffers_to_write.empty());
       new_buffer1 = std::move(buffers_to_write.back());
       buffers_to_write.pop_back();
       new_buffer1->reset();
     }
 
-    if (new_buffer2 != nullptr) {
+    if (new_buffer2 == nullptr) {
       assert(!buffers_to_write.empty());
       new_buffer2 = std::move(buffers_to_write.back());
       buffers_to_write.pop_back();

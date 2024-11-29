@@ -1,4 +1,4 @@
-#include "control/ClientSession.h"
+#include "controller/ClientSession.h"
 
 #include <stdexcept>
 
@@ -53,6 +53,7 @@ std::string ClientSession::showHelp() {
          "current database\r\n"
          "SET <key> <value> - Set the value for the key in the current "
          "database\r\n"
+         "DEL <key>      - Delete the key from the current database\r\n"
          "LIST           - List all key-value pairs in the current database\r\n"
          "CURRENTDB      - Show the current selected database index\r\n"
          "HELP           - Show this help message\r\n";

@@ -1,14 +1,14 @@
 #include "net/BambooServer.h"
 
 #include "base/Logging.h"
-#include "control/ClientSession.h"
-#include "control/DatabaseManager.h"
+#include "controller/ClientSession.h"
+#include "controller/DatabaseManager.h"
 #include "net/TcpConnection.h"
 
 namespace bamboo {
 
 BambooServer::BambooServer(EventLoop *loop, const InetAddress &listenAddr)
-    : server_(loop, listenAddr, "KVServer"),
+    : server_(loop, listenAddr, "BambooServer"),
       db_manager_(new DatabaseManager()) {
   server_.setConnectionCallback(
       std::bind(&BambooServer::onConnection, this, std::placeholders::_1));
@@ -17,7 +17,7 @@ BambooServer::BambooServer(EventLoop *loop, const InetAddress &listenAddr)
                 std::placeholders::_2, std::placeholders::_3));
 }
 
- BambooServer::~BambooServer() = default;
+BambooServer::~BambooServer() = default;
 
 void BambooServer::onConnection(const TcpConnectionPtr &conn) {
   LOG_INFO << "KVServer - " << conn->peerAddress().toIpPort() << " -> "

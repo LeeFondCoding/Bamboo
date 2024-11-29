@@ -1,4 +1,4 @@
-#include "control/DatabaseManager.h"
+#include "controller/DatabaseManager.h"
 
 #include <leveldb/db.h>
 #include <sstream>

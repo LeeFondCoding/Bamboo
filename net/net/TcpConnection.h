@@ -112,7 +112,9 @@ private:
 
   ConnectionCallback connection_call_back_;
   MessageCallback message_call_back_;
+  // you need to set, no default callback
   WriteCompleteCallback write_complete_call_back_;
+  // you need to set, no default callback
   HighWaterMarkCallback high_water_mark_call_back_;
   size_t high_water_mark_;
   CloseCallback close_callback_;

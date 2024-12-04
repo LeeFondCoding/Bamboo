@@ -107,6 +107,7 @@ private:
   bool log_hup_{true};
 
   EventLoop *loop_;
+  // tie his own TcpConnection
   std::weak_ptr<void> tie_;
 
   ReadEventCallback read_callback_;

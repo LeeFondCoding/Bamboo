@@ -76,9 +76,9 @@ TimerQueue::~TimerQueue() {
   }
 }
 
-// memory leak???
 TimerId TimerQueue::addTimer(TimerCallback cb, TimeStamp when,
                              double interval) {
+  // timer will delete in ~TimerQueue()
   auto timer = new Timer(std::move(cb), when, interval);
   loop_->runInLoop(std::bind(&TimerQueue::addTimerInLoop, this, timer));
   return {timer, timer->sequece()};

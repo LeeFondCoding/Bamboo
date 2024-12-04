@@ -69,10 +69,12 @@ void TcpServer::newConnection(int sockfd, const InetAddress &peer_addr) {
 }
 
 void TcpServer::removeConnection(const TcpConnectionPtr &conn) {
+  // send cb(remove connection) to main loop
   loop_->runInLoop(std::bind(&TcpServer::removeConnnectionInLoop, this, conn));
 }
 
 void TcpServer::removeConnnectionInLoop(const TcpConnectionPtr &conn) {
+  loop_->assertInLoopThread();
   LOG_INFO << "TcpServer::removeConnection [" << name_ << "] - connection "
            << conn->name();
   if (connections_.erase(conn->name()) != 1) {
